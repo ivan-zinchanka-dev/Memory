@@ -1,50 +1,74 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MemoryCard : MonoBehaviour {
 
-    [SerializeField] private GameObject cardBack;
-    [SerializeField] private SceneController controller;
+    [SerializeField] private GameObject _cardBack;
+    [SerializeField] private SceneController _controller;
+    [SerializeField] private SpriteRenderer _spriteRend = null;
+
+    public int Id { get; private set; }
+
+    private bool _isReveal = true;
+
+    public bool IsReveal
+    {
+        get {
+
+            return _isReveal;
+        }
+
+        set
+        {
+            if ((IsReveal && value == false) || (!IsReveal && value == true))
+            {
+                StartCoroutine(RotateCard());
+            }        
+
+            _isReveal = value;
+        }
+    }
+
+    public IEnumerator StartAction()
+    {
+        IsReveal = true;
+        yield return new WaitForSeconds(_controller.TimeToMemorize);
+        IsReveal = false;
+    }
+
+    public void SetCard(int id, Sprite image)
+    {
+        Id = id;
+        _spriteRend.sprite = image;
+    }
+
+    public void OnMouseDown(){
+     
+        if (IsReveal == false && _controller.canReveal)
+        {
+            IsReveal = true;
+            _controller.CardRevealed(this);
+        }
+    }
 
     void Start()
     {
         StartCoroutine(StartAction());
     }
 
-    public void OnMouseDown(){
-     
-        if (cardBack.activeSelf && controller.canReveal)
-        {
-            cardBack.SetActive(false);
-            controller.CardRevealed(this);
-        }
-    }
-
-    public void Unreveal() {
-
-        cardBack.SetActive(true);
-    }
-
-    private int _id;
-
-    public int id {
-
-        get { return _id; }
-    }
-
-    public void SetCard(int id, Sprite image) {
-
-        _id = id;
-        GetComponent<SpriteRenderer>().sprite = image;
-    }
-
-
-    public IEnumerator StartAction()
+    private IEnumerator RotateCard()
     {
-        cardBack.SetActive(false);
-        yield return new WaitForSeconds(2.5f);
-        cardBack.SetActive(true);      
+        float deltaAngle = 0.0f;
+        const float RotationSpeed = 2.0f;
+
+        while (deltaAngle <= 180.0f)
+        {
+            deltaAngle += RotationSpeed;
+            transform.Rotate(Vector3.up, RotationSpeed, Space.Self);
+            yield return new WaitForSeconds(0.001f);
+        }
+
+        yield return null;
     }
-    
+
 }

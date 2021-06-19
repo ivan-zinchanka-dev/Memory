@@ -1,39 +1,41 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SceneController : MonoBehaviour {
 
-    public const int gridRows = 2;
-    public const int gridCols = 6;
-    public const float offsetX = 2.3f;
-    public const float offsetY = 4.4f;
+    [SerializeField] private MemoryCard _originalCard = null;
+    [SerializeField] private Sprite[] _images = null;
+    [SerializeField] private TextMesh _healthLabel = null;
+    [SerializeField] private TextMesh _victoryLabel = null;
+    [SerializeField] private TextMesh _overLabel = null;
+    [SerializeField] private float _timeToMemorize = 2.0f;
+
+    public float TimeToMemorize { get { return _timeToMemorize; } set { _timeToMemorize = value; } }
+
+    public const int GridRows = 2;
+    public const int GridCols = 6;
+    public const float OffsetX = 2.3f;
+    public const float OffsetY = 4.4f;
+    
     private int _score = 0;
     private int _health = 5;
-
-    [SerializeField] private MemoryCard originalCard; 
-    [SerializeField] private Sprite[] images;
-    [SerializeField] private TextMesh HealthLabel;
-    [SerializeField] private TextMesh VictLabel;
-    [SerializeField] private TextMesh OverLabel;
+    private MemoryCard _firstRevealed = null;
+    private MemoryCard _secondRevealed = null;
     
-    private MemoryCard _firstRevealed;
-    private MemoryCard _secondRevealed;
     public bool canReveal {
 
         get { return _secondRevealed == null; }
-
     }
 
     private IEnumerator CheckMatch()
     {
-        if (_firstRevealed.id == _secondRevealed.id)
+        if (_firstRevealed.Id == _secondRevealed.Id)
         {
              _score++;
 
-            if (_score >= 6)
+            if (_score >= GridCols)
             {
-                VictLabel.text = "Victory!";
+                _victoryLabel.text = "Victory!";
             }
         }
         else
@@ -42,16 +44,16 @@ public class SceneController : MonoBehaviour {
 
             if(_health <= 0)
             {
-                OverLabel.text = "Game Over";
+                _overLabel.text = "Game Over";
                 yield return new WaitForSeconds(1.2f);
                 Restart();
             }
             else
             {
-                HealthLabel.text = "Health: " + _health;
-                yield return new WaitForSeconds(0.8f);
-                _firstRevealed.Unreveal();
-                _secondRevealed.Unreveal();
+                _healthLabel.text = "Health: " + _health;
+                yield return new WaitForSeconds(_timeToMemorize);
+                _firstRevealed.IsReveal = false;
+                _secondRevealed.IsReveal = false;
             }        
         }
 
@@ -74,63 +76,56 @@ public class SceneController : MonoBehaviour {
 
     }
 
-    private int[] ShuffleArray(int[] numbers)
-    {       
-        int i, tmp, r;
-        int[] newArray = numbers.Clone() as int[];
+    private void Shuffle(int[] numbers)
+    {
+        int i, firstNumberValue, secondNumberIndex;
 
-        for (i = 0; i < newArray.Length/2; i++)
+        for (i = 0; i < numbers.Length / 2; i++)
         {
-            tmp = newArray[i];
-            r = Random.Range(i, newArray.Length/2);
-            newArray[i] = newArray[r];
-            newArray[r] = tmp;          
+            firstNumberValue = numbers[i];
+            secondNumberIndex = Random.Range(i, numbers.Length / 2);
+            numbers[i] = numbers[secondNumberIndex];
+            numbers[secondNumberIndex] = firstNumberValue;
         }
 
-        for (i = newArray.Length / 2; i < newArray.Length; i++)
+        for (i = numbers.Length / 2; i < numbers.Length; i++)
         {
-            tmp = newArray[i];
-            r = Random.Range(i, newArray.Length);
-            newArray[i] = newArray[r];
-            newArray[r] = tmp;
+            firstNumberValue = numbers[i];
+            secondNumberIndex = Random.Range(i, numbers.Length);
+            numbers[i] = numbers[secondNumberIndex];
+            numbers[secondNumberIndex] = firstNumberValue;
         }
-
-        return newArray;
+        
     }
-
 
     void Start() {
 
-        Vector3 startPos = originalCard.transform.position;
-
-        int i, j;
-          
+        Vector3 startPos = _originalCard.transform.position;
+      
         int[] numbers = { 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 };
+        Shuffle(numbers);
 
-        numbers = ShuffleArray(numbers);
-
-        
-        for (i = 0; i < gridCols; i++)
+        for (int i = 0; i < GridCols; i++)
         {
-            for (j = 0; j < gridRows; j++)
+            for (int j = 0; j < GridRows; j++)
             {
                 MemoryCard card;
 
                 if (i == 0 && j == 0) {
 
-                    card = originalCard;
+                    card = _originalCard;
                 }
                 else {
 
-                    card = Instantiate(originalCard) as MemoryCard;
+                    card = Instantiate(_originalCard) as MemoryCard;
                 }
 
-                int index = j * gridCols + i;               
+                int index = j * GridCols + i;               
                 int id = numbers[index];
-                card.SetCard(id, images[id]);
+                card.SetCard(id, _images[id]);
 
-                float posX = (offsetX * i) + startPos.x;
-                float posY = -(offsetY * j) + startPos.y;
+                float posX = (OffsetX * i) + startPos.x;
+                float posY = -(OffsetY * j) + startPos.y;
                 card.transform.position = new Vector3(posX, posY, startPos.z);
                
             }
@@ -139,8 +134,7 @@ public class SceneController : MonoBehaviour {
 
     public void Restart() {
 
-        Application.LoadLevel("SampleScene");
-       
+        Application.LoadLevel(0);      
     }
 
 }

@@ -1,42 +1,41 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+[RequireComponent(typeof(SpriteRenderer))]
 public class RestartButton : MonoBehaviour {
 
-    [SerializeField] private GameObject targetObject;
-    [SerializeField] private string targetMessage;
-    public Color highlightColor = Color.cyan;
+    [SerializeField] private SceneController _controller = null;
+    [SerializeField] private Color _highlightColor = Color.yellow;
+    [SerializeField] private SpriteRenderer _sprite = null;
+
+    private Vector2 _normalScale = default;
+    private Vector2 _pressedScale = new Vector2(0.6f, 0.6f);
+
+    private void Start()
+    {
+        _normalScale = transform.localScale;
+    }
 
     public void OnMouseOver() {
 
-        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+        if (_sprite != null) {
 
-        if (sprite != null) {
-
-            sprite.color = highlightColor;
+            _sprite.color = _highlightColor;
         }
     }
     public void OnMouseExit() {
 
-        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+        if (_sprite != null) {
 
-        if (sprite != null) {
-
-            sprite.color = Color.white;
+            _sprite.color = Color.white;
         }
     }
     public void OnMouseDown() {
-
-        transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+ 
+        transform.localScale = _pressedScale;
     }
     public void OnMouseUp() {
 
-        transform.localScale = Vector3.one;
-
-        if (targetObject != null) {
-
-            targetObject.SendMessage(targetMessage);
-        }
+        transform.localScale = _normalScale;
+        _controller.Restart();
     }
 }
