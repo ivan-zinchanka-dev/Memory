@@ -3,15 +3,22 @@ using UnityEngine;
 
 public class MemoryCard : MonoBehaviour {
 
-    [SerializeField] private GameObject _cardBack;
-    [SerializeField] private SceneController _controller;
+    [SerializeField] private SceneController _controller = null;
     [SerializeField] private SpriteRenderer _spriteRend = null;
 
     public int Id { get; private set; }
 
+    public int Group { get; set; } = default;
+
     private bool _isReveal = true;
 
-    public bool IsReveal
+    private float _deltaAngle = 0.0f;
+    private float _targetRotation = 180.0f;
+    private float _rotationSpeed = 250.0f;
+
+    private bool _isRotate = false;
+
+    public bool IsRevealed
     {
         get {
 
@@ -20,9 +27,11 @@ public class MemoryCard : MonoBehaviour {
 
         set
         {
-            if ((IsReveal && value == false) || (!IsReveal && value == true))
+            if ((IsRevealed == true && value == false) || (IsRevealed == false && value == true))      
             {
-                StartCoroutine(RotateCard());
+                //StartCoroutine(RotateCard());
+
+                _isRotate = true;
             }        
 
             _isReveal = value;
@@ -31,9 +40,9 @@ public class MemoryCard : MonoBehaviour {
 
     public IEnumerator StartAction()
     {
-        IsReveal = true;
-        yield return new WaitForSeconds(_controller.TimeToMemorize);
-        IsReveal = false;
+        IsRevealed = true;
+        yield return _controller.TimeToMemorize;
+        IsRevealed = false;
     }
 
     public void SetCard(int id, Sprite image)
@@ -43,11 +52,10 @@ public class MemoryCard : MonoBehaviour {
     }
 
     public void OnMouseDown(){
-     
-        if (IsReveal == false && _controller.canReveal)
-        {
-            IsReveal = true;
-            _controller.CardRevealed(this);
+
+        if (IsRevealed == false && _controller.CanReveal)
+        { 
+            _controller.CardReveal(this, delegate() { IsRevealed = true; });
         }
     }
 
@@ -56,19 +64,37 @@ public class MemoryCard : MonoBehaviour {
         StartCoroutine(StartAction());
     }
 
-    private IEnumerator RotateCard()
-    {
-        float deltaAngle = 0.0f;
-        const float RotationSpeed = 2.0f;
+    //private IEnumerator RotateCard()
+    //{
+    //    float deltaAngle = 0.0f;
+    //    const float RotationSpeed = 1.5f;
+    //    WaitForSeconds waitingTime = new WaitForSeconds(0.001f);
 
-        while (deltaAngle <= 180.0f)
-        {
-            deltaAngle += RotationSpeed;
-            transform.Rotate(Vector3.up, RotationSpeed, Space.Self);
-            yield return new WaitForSeconds(0.001f);
+    //    while (deltaAngle <= 180.0f)
+    //    {
+    //        deltaAngle += RotationSpeed;
+    //        transform.Rotate(Vector3.up, RotationSpeed * Time.deltaTime, Space.Self);
+    //        yield return waitingTime;
+    //    }
+
+    //    yield return null;
+    //}
+
+    private void Update()
+    {       
+        if (_isRotate) {
+
+            if (_deltaAngle < _targetRotation)
+            {
+                _deltaAngle += _rotationSpeed * Time.deltaTime;
+                transform.Rotate(Vector3.up, _rotationSpeed * Time.deltaTime, Space.Self);
+            }
+            else
+            {
+                _isRotate = false;
+                _deltaAngle = 0.0f;
+            }
         }
-
-        yield return null;
     }
 
 }

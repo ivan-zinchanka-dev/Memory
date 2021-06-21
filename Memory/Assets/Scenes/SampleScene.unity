@@ -815,7 +815,7 @@ MonoBehaviour:
   _healthLabel: {fileID: 151491834}
   _victoryLabel: {fileID: 245934653}
   _overLabel: {fileID: 570324921}
-  _timeToMemorize: 1
+  _timeToMemorize: 1.7
 --- !u!4 &1574567488
 Transform:
   m_ObjectHideFlags: 0

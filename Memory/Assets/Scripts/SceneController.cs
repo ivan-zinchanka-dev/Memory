@@ -8,9 +8,9 @@ public class SceneController : MonoBehaviour {
     [SerializeField] private TextMesh _healthLabel = null;
     [SerializeField] private TextMesh _victoryLabel = null;
     [SerializeField] private TextMesh _overLabel = null;
-    [SerializeField] private float _timeToMemorize = 2.0f;
-
-    public float TimeToMemorize { get { return _timeToMemorize; } set { _timeToMemorize = value; } }
+    [SerializeField] private float _timeToMemorize = 1.5f;
+    
+    public WaitForSeconds TimeToMemorize { get; set; }
 
     public const int GridRows = 2;
     public const int GridCols = 6;
@@ -21,8 +21,8 @@ public class SceneController : MonoBehaviour {
     private int _health = 5;
     private MemoryCard _firstRevealed = null;
     private MemoryCard _secondRevealed = null;
-    
-    public bool canReveal {
+
+    public bool CanReveal {
 
         get { return _secondRevealed == null; }
     }
@@ -45,15 +45,13 @@ public class SceneController : MonoBehaviour {
             if(_health <= 0)
             {
                 _overLabel.text = "Game Over";
-                yield return new WaitForSeconds(1.2f);
-                Restart();
             }
             else
             {
                 _healthLabel.text = "Health: " + _health;
-                yield return new WaitForSeconds(_timeToMemorize);
-                _firstRevealed.IsReveal = false;
-                _secondRevealed.IsReveal = false;
+                yield return TimeToMemorize;
+                _firstRevealed.IsRevealed = false;
+                _secondRevealed.IsRevealed = false;
             }        
         }
 
@@ -62,18 +60,22 @@ public class SceneController : MonoBehaviour {
 
     }
 
-    public void CardRevealed(MemoryCard card)
+    public void CardReveal(MemoryCard card, System.Action callback = null)
     {
         if (_firstRevealed == null) {
 
             _firstRevealed = card;
+            callback?.Invoke();
         }
-        else {
+        else {              
 
-            _secondRevealed = card;          
-            StartCoroutine(CheckMatch());
+            if (_firstRevealed.Group != card.Group)
+            {
+                _secondRevealed = card;
+                callback?.Invoke();
+                StartCoroutine(CheckMatch());
+            }         
         }
-
     }
 
     private void Shuffle(int[] numbers)
@@ -96,6 +98,11 @@ public class SceneController : MonoBehaviour {
             numbers[secondNumberIndex] = firstNumberValue;
         }
         
+    }
+
+    private void Awake()
+    {
+        TimeToMemorize = new WaitForSeconds(_timeToMemorize);
     }
 
     void Start() {
@@ -127,7 +134,8 @@ public class SceneController : MonoBehaviour {
                 float posX = (OffsetX * i) + startPos.x;
                 float posY = -(OffsetY * j) + startPos.y;
                 card.transform.position = new Vector3(posX, posY, startPos.z);
-               
+
+                card.Group = j;
             }
         }
     }
